@@ -101,9 +101,90 @@ func (s *songPostgresStorage) MustAutoMigrate() {
 	s.log.Info().Msg("Migrations applied successfully")
 }
 
-func (s *songPostgresStorage) GetByFilters(ctx context.Context, filters model.SongFilter) (*model.Song, error) {
-	panic("not implement")
+func (s *songPostgresStorage) GetByFilters(ctx context.Context, filters model.SongFilter) ([]*model.Song, error) {
+	query := `
+		SELECT id, title, text, link, "group", release_date, created_at, updated_at, deleted_at
+		FROM songs
+		WHERE 1=1`
+	var args []interface{}
+	argIndex := 1
 
+	if filters.ReleaseDateFrom != nil {
+		query += fmt.Sprintf(" AND release_date >= $%d", argIndex)
+		args = append(args, *filters.ReleaseDateFrom)
+		argIndex++
+	}
+	if filters.ReleaseDateTo != nil {
+		query += fmt.Sprintf(" AND release_date <= $%d", argIndex)
+		args = append(args, *filters.ReleaseDateTo)
+		argIndex++
+	}
+	if filters.Title != nil {
+		query += fmt.Sprintf(" AND title ILIKE $%d", argIndex)
+		args = append(args, "%"+*filters.Title+"%")
+		argIndex++
+	}
+	if filters.Text != nil {
+		query += fmt.Sprintf(" AND text ILIKE $%d", argIndex)
+		args = append(args, "%"+*filters.Text+"%")
+		argIndex++
+	}
+	if filters.Link != nil {
+		query += fmt.Sprintf(" AND link ILIKE $%d", argIndex)
+		args = append(args, "%"+*filters.Link+"%")
+		argIndex++
+	}
+	if filters.Group != nil {
+		query += fmt.Sprintf(" AND \"group\" ILIKE $%d", argIndex)
+		args = append(args, "%"+*filters.Group+"%")
+		argIndex++
+	}
+
+	query += " ORDER BY release_date DESC"
+
+	if filters.PageSize >= 0 {
+		query += fmt.Sprintf(" LIMIT $%d", argIndex)
+		args = append(args, filters.PageSize)
+		argIndex++
+	}
+	if filters.Page >= 0 && filters.PageSize > 0 {
+		offset := filters.Page * filters.PageSize
+		query += fmt.Sprintf(" OFFSET $%d", argIndex)
+		args = append(args, offset)
+		argIndex++
+	}
+
+	rows, err := s.pool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	songs := make([]*model.Song, 0)
+	for rows.Next() {
+		var song model.Song
+		err := rows.Scan(
+			&song.ID,
+			&song.Title,
+			&song.Text,
+			&song.Link,
+			&song.Group,
+			&song.ReleaseDate,
+			&song.CreatedAt,
+			&song.UpdatedAt,
+			&song.DeletedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		songs = append(songs, &song)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return songs, nil
 }
 
 func (s *songPostgresStorage) GetById(ctx context.Context, id string, allowDeleted bool) (*model.Song, error) {

@@ -310,12 +310,6 @@ const docTemplate = `{
                 },
                 "page_size": {
                     "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
                 }
             }
         },

@@ -64,15 +64,31 @@ func (h *SongHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var songs []dto.Song = make([]dto.Song, 0)
-	total := len(songs)
+	songs, err := h.songService.GetByFilters(r.Context(), model.SongFilter{
+		Group:           filter.Group,
+		Title:           filter.Title,
+		Text:            filter.Text,
+		Link:            filter.Link,
+		ReleaseDateFrom: filter.ReleaseDateFrom,
+		ReleaseDateTo:   filter.ReleaseDateTo,
+		Page:            filter.Page,
+		PageSize:        filter.PageSize,
+	})
+	if err != nil {
+		utils.WriteErrorJson(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	songsDto := make([]dto.Song, 0)
+
+	for _, i := range songs {
+		songsDto = append(songsDto, dto.SongFromModel(i))
+	}
 
 	response := dto.SongList{
-		Data:       songs,
-		Total:      total,
-		Page:       filter.Page,
-		PageSize:   filter.PageSize,
-		TotalPages: (total + filter.PageSize - 1) / filter.PageSize, // Calculate total pages
+		Data:     songsDto,
+		Page:     filter.Page,
+		PageSize: filter.PageSize,
 	}
 
 	utils.WriteJson(w, response, http.StatusOK)

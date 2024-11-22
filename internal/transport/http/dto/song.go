@@ -39,7 +39,7 @@ type SongFilter struct {
 	Text            *string    `json:"text"`
 	Link            *string    `json:"link"`
 	Group           *string    `json:"group"`
-	Page            int        `json:"page" schema:"page,default:10"`
+	Page            int        `json:"page" schema:"page,default:0"`
 	PageSize        int        `json:"page_size" schema:"page_size,default:10"`
 }
 
@@ -52,9 +52,7 @@ type CreateSong struct {
 } // @name CreateSong
 
 type SongList struct {
-	Data       []Song `json:"data"`
-	Total      int    `json:"total"`
-	Page       int    `json:"page"`
-	PageSize   int    `json:"page_size"`
-	TotalPages int    `json:"total_pages"`
+	Data     []Song `json:"data"`
+	Page     int    `json:"page"`
+	PageSize int    `json:"page_size"`
 } // @name SongList

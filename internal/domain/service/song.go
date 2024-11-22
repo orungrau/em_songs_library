@@ -7,7 +7,7 @@ import (
 )
 
 type SongStorage interface {
-	GetByFilters(ctx context.Context, filters model.SongFilter) (*model.Song, error)
+	GetByFilters(ctx context.Context, filters model.SongFilter) ([]*model.Song, error)
 	GetById(ctx context.Context, id string, allowDeleted bool) (*model.Song, error)
 	Create(ctx context.Context, song model.Song) (*model.Song, error)
 	Update(ctx context.Context, song model.Song) (*model.Song, error)
@@ -17,7 +17,7 @@ type SongStorage interface {
 }
 
 type SongService interface {
-	GetByFilters(ctx context.Context, filters model.SongFilter) (*model.Song, error)
+	GetByFilters(ctx context.Context, filters model.SongFilter) ([]*model.Song, error)
 	Get(ctx context.Context, id string) (*model.Song, error)
 	Create(ctx context.Context, song model.Song) (*model.Song, error)
 	Update(ctx context.Context, song model.Song) (*model.Song, error)
@@ -38,7 +38,7 @@ func NewSongService(log zerolog.Logger, storage SongStorage) SongService {
 	}
 }
 
-func (s *songService) GetByFilters(ctx context.Context, filters model.SongFilter) (*model.Song, error) {
+func (s *songService) GetByFilters(ctx context.Context, filters model.SongFilter) ([]*model.Song, error) {
 	return s.storage.GetByFilters(ctx, filters)
 }
 
