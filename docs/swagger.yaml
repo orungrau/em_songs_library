@@ -1,0 +1,213 @@
+definitions:
+  CreateSong:
+    properties:
+      group:
+        type: string
+      link:
+        type: string
+      release_date:
+        type: integer
+      text:
+        type: string
+      title:
+        type: string
+    type: object
+  Song:
+    properties:
+      group:
+        type: string
+      id:
+        type: string
+      link:
+        type: string
+      release_date:
+        type: string
+      text:
+        type: string
+      title:
+        type: string
+    type: object
+  SongList:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Song'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  Status:
+    properties:
+      error:
+        type: boolean
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /songs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of songs with optional filters such as release
+        date range, title, group, and pagination.
+      parameters:
+      - description: Filter songs by release date from (Unix timestamp)
+        in: query
+        name: release_date_from
+        type: integer
+      - description: Filter songs by release date to (Unix timestamp)
+        in: query
+        name: release_date_to
+        type: integer
+      - description: Filter songs by title
+        in: query
+        name: title
+        type: string
+      - description: Filter songs by text
+        in: query
+        name: text
+        type: string
+      - description: Filter songs by link
+        in: query
+        name: link
+        type: string
+      - description: Filter songs by group
+        in: query
+        name: group
+        type: string
+      - description: 'Page number (default: 0)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 10)'
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of songs
+          schema:
+            $ref: '#/definitions/SongList'
+        "400":
+          description: Bad request error with a detailed message
+          schema:
+            $ref: '#/definitions/Status'
+      summary: Get all songs
+      tags:
+      - songs
+    post:
+      consumes:
+      - application/json
+      description: Add a new song to the library by providing required details.
+      parameters:
+      - description: Details of the song to create
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/CreateSong'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: The created song
+          schema:
+            $ref: '#/definitions/Song'
+        "400":
+          description: Bad request error with a detailed message
+          schema:
+            $ref: '#/definitions/Status'
+      summary: Create a new song
+      tags:
+      - songs
+  /songs/{songId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a song from the library by its ID.
+      parameters:
+      - description: ID of the song to delete
+        in: path
+        name: songId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Confirmation of successful deletion
+          schema:
+            $ref: '#/definitions/Status'
+        "400":
+          description: Bad request error with a detailed message
+          schema:
+            $ref: '#/definitions/Status'
+      summary: Delete a song
+      tags:
+      - songs
+    get:
+      consumes:
+      - application/json
+      description: Retrieve details of a specific song by its ID.
+      parameters:
+      - description: ID of the song to retrieve
+        in: path
+        name: songId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Details of the requested song
+          schema:
+            $ref: '#/definitions/Song'
+        "400":
+          description: Bad request error with a detailed message
+          schema:
+            $ref: '#/definitions/Status'
+      summary: Get a single song
+      tags:
+      - songs
+    patch:
+      consumes:
+      - application/json
+      description: Update the details of an existing song. The song ID must be specified
+        in the request.
+      parameters:
+      - description: ID of the song to update
+        in: path
+        name: songId
+        required: true
+        type: string
+      - description: Updated details of the song
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/Song'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The updated song
+          schema:
+            $ref: '#/definitions/Song'
+        "400":
+          description: Bad request error with a detailed message
+          schema:
+            $ref: '#/definitions/Status'
+      summary: Update an existing song
+      tags:
+      - songs
+swagger: "2.0"
