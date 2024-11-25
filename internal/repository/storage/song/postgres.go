@@ -13,6 +13,7 @@ import (
 	"github.com/orungrau/em_song_library/internal/domain/model"
 	"github.com/orungrau/em_song_library/internal/domain/service"
 	"github.com/rs/zerolog"
+	"strings"
 )
 
 type PostgresStorageConfig interface {
@@ -140,7 +141,7 @@ func (s *songPostgresStorage) GetByFilters(ctx context.Context, filters model.So
 		argIndex++
 	}
 
-	query += " ORDER BY release_date DESC"
+	query += "  AND deleted_at IS NULL ORDER BY release_date DESC"
 
 	if filters.PageSize >= 0 {
 		query += fmt.Sprintf(" LIMIT $%d", argIndex)
@@ -256,33 +257,35 @@ func (s *songPostgresStorage) Update(ctx context.Context, song model.Song) (*mod
 	var args []interface{}
 	argIndex := 1
 
-	if song.Title != nil {
+	if song.Title != nil && *song.Title != "" {
 		query += `title = $` + fmt.Sprint(argIndex) + `, `
 		args = append(args, *song.Title)
 		argIndex++
 	}
-	if song.Text != nil {
+	if song.Text != nil && *song.Text != "" {
 		query += `"text" = $` + fmt.Sprint(argIndex) + `, `
 		args = append(args, *song.Text)
 		argIndex++
 	}
-	if song.Link != nil {
+	if song.Link != nil && *song.Link != "" {
 		query += `"link" = $` + fmt.Sprint(argIndex) + `, `
 		args = append(args, *song.Link)
 		argIndex++
 	}
-	if song.Group != nil {
+	if song.Group != nil && *song.Group != "" {
 		query += `"group" = $` + fmt.Sprint(argIndex) + `, `
 		args = append(args, *song.Group)
 		argIndex++
 	}
-	if song.ReleaseDate != nil {
+	if song.ReleaseDate != nil && !song.ReleaseDate.IsZero() {
 		query += `release_date = $` + fmt.Sprint(argIndex) + `, `
 		args = append(args, *song.ReleaseDate)
 		argIndex++
 	}
 
-	query += `WHERE id = $` + fmt.Sprint(argIndex) + ` AND deleted_at IS NULL 
+	query = strings.TrimSuffix(query, ", ")
+
+	query += ` WHERE id = $` + fmt.Sprint(argIndex) + ` AND deleted_at IS NULL 
 		RETURNING id, title, text, link, "group", release_date, created_at, updated_at, deleted_at`
 	args = append(args, *song.ID)
 
@@ -299,6 +302,7 @@ func (s *songPostgresStorage) Update(ctx context.Context, song model.Song) (*mod
 		&updatedSong.DeletedAt,
 	)
 	if err != nil {
+		s.log.Err(err).Str("query", query).Msg("")
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("song not found or already deleted")
 		}

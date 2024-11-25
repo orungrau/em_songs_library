@@ -175,6 +175,7 @@ func (h *SongHandler) Create(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} dto.Status "Bad request error with a detailed message"
 // @Router /songs/{songId} [patch]
 func (h *SongHandler) Update(w http.ResponseWriter, r *http.Request) {
+	songId := chi.URLParam(r, "songId")
 	var updateDTO dto.Song
 
 	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
@@ -188,7 +189,7 @@ func (h *SongHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updatedSong, err := h.songService.Update(r.Context(), model.Song{
-		ID:          &updateDTO.ID,
+		ID:          &songId,
 		Title:       &updateDTO.Title,
 		Text:        updateDTO.Text,
 		Link:        updateDTO.Link,
@@ -198,6 +199,7 @@ func (h *SongHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		utils.WriteErrorJson(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	utils.WriteJson(w, dto.SongFromModel(updatedSong), http.StatusOK)
@@ -219,6 +221,7 @@ func (h *SongHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	err := h.songService.Delete(r.Context(), songId)
 	if err != nil {
 		utils.WriteErrorJson(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	status := dto.Status{

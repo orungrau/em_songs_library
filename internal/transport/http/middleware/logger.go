@@ -39,7 +39,7 @@ func (m *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 					Interface("panic", rec).
 					Int("status", http.StatusInternalServerError).
 					Msg("Recovered from panic")
-				http.Error(lrw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				http.Error(lrw, "InternalServerError", http.StatusInternalServerError)
 				return
 			}
 
